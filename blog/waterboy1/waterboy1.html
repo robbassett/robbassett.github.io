@@ -1,0 +1,97 @@
+<!DOCTYPE HTML>
+<!--
+	Phantom by HTML5 UP
+	html5up.net | @ajlkn
+	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+-->
+<html>
+	<head>
+		<title>Waterboy 1</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="../../assets/css/main.css" />
+		<noscript><link rel="stylesheet" href="../../assets/css/noscript.css" /></noscript>
+	</head>
+	<body class="is-preload">
+		<!-- Wrapper -->
+			<div id="wrapper">
+
+				<!-- Header -->
+					<header id="header">
+						<div class="inner">
+
+							<!-- Logo -->
+								<a href="../bloghome.html" class="logo">
+									<span class="symbol"><img src="../../images/test.svg" alt="" /></span><span class="title">Return</span>
+								</a>
+
+						</div>
+					</header>
+
+				<!-- Main -->
+					<div id="main">
+						<div class="inner">
+							<h1>Waterboy Part 1</h1>
+							<span class="image main"><img src="houseplants.jpeg" alt="" /></span>
+                            <h3>What's the goal?</h3>
+                            <p>A few years ago I bought a Raspberry Pi. I used it to play old video games for a while then put it in a box in my closet where it collected dust for a long time. In 2021 I began working as a data scientist at a pharmaceutical company where I got involved in so-called "process analytical technology" (PAT) projects. This involved the use of sensors, soft-sensors, and machine learning to provide real time monitors of critical quality attributes in biopharmaceutical manufacturing facilities. This sparked my interest in the area of digital automation and process control. Working in a high risk situation, however, put up some critical road blocks that resulted in somewhat slow progress... but then I remembered my Raspberry Pi!</p>
+                            <p>I realised that I could experiment to my heart's content at home with full control over the entire IT infrastructure. At the same time, my wife and I were acquiring a large number of houseplants, which required regular maintenance. Thus, my first project was born: an automated houseplant watering system. I found a number of similar projects online, which typically focused on watering a single plant, a kind of mini proof of concept. My vision was to create a distributed watering system with a central hub providing a monitoring dashboard. To achieve this I came up with the following design:</p>
+                            <center><img src="waterboy_v1.png" style="width: 75%;"></center>
+                            <p>My old Raspberry Pi has been repurposed as a web server, which provides API endpoints to receive sensor measurements from each of the client devices. Sensor measurements are stored in a SQLite database and made available via a Dashboard. The database schema is fairly minimalist, but may expand in the future:</p>
+							<center><img src="waterboydb.png" style="width: 50%;"></center>
+							<p>The database stores plants and measures, the latter currently includes soil moisture and light values. For both, I include raw and calibrated values (more on sensor calibration in a future post). The current client devices are Raspberry Pi Pico W microcontrollers as the onboard WiFi chip allows sensor measurements to be sent to the server via API without any other hardware.</p>
+							<h3>Getting Started</h3>
+							<h5>Prototyping the Server</h5>
+							<p>At this point, I'm an absolute beginner at IoT with only a bit of experience with electronic circuit. Having taken a single course in electronics circuits during my physics undergraduate degree, I understand the basics of electronic components and how to read circuit schematics and assemble them on a solderless breadboard. Where I do have far more experience is with coding in Python, data analysis, and building dashboards. From that point of view, this project also serves the dual purpose of expanding my knowledge of web development and server management.</p>
+							<div>
+								<div style="float: left; width: 20%">
+                                    <center>
+										<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Python.svg/800px-Python.svg.png" style="width:90%;">
+									</center>
+                                </div>
+                                <div style="float: right; width: 80%">
+                                    <p>To get started with the web server portion of this project I first worked through <a href="https://realpython.com/flask-connexion-rest-api/">this</a> tutorial from Real Python on developing Flask API's with Connexion. One of the main benefits of using the pacakges laid out in this tutorial is that it automatically compiles a Swagger REST API documentation of all your API endpoints. For starters I created a POST endpoint for creating a new plant, and a GET endpoint for retrieving the list of existing plants. You might be interested in a particular plant so I created additional GET, DELETE, and PUT endpoints at /plant/{plant_name} to retrieve, remove, or edit a particular plant. Finally I created a POST endpoint for trace values to allow the client to send sensor readings to the server.</p>
+                                </div>
+							</div>
+							<center>
+								<img src="swagger.png" style="width: 90%;">
+								<figcaption>Swagger REST API Documentation</figcaption>
+							</center>
+							<p>One issue with the Real Python tutorial, however, is the UI for the demo is rubbish... just a black and white HTML page with text. This simply won't do as I want my plant monitoring dashboard to look a bit more flash. Fortunately there are heaps of dashboard templates available online so I grabbed the <a href="https://appseed.us/product/volt-dashboard/flask/">Volt template from Appseed</a> and strapped my Flask API onto the back end. I'll provide more details on the dashboard in a later post after I've managed to collect some data to display.</p>
+							<h5>Client First Steps</h5>
+							For the client of my distributed watering system I'll be using Raspberry Pi Pico W microcontrollers. These are essentially miniaturised Raspberry Pi's that can be used for controlling a variety of digital and analog devices. From my design above you can see that the first incarnation will simply be a monitoring system using a soil moisture sensor and an ambient light sensor to monitor light and water, two key elements in plant happiness:
+							<div>
+								<div style="float: left; width: 50%">
+									<center><img src="als.jpeg" style="width: 90%"></center>
+								</div>
+								<div style="float: left; width: 50%">
+									<center><img src="sms.jpeg" style="width: 90%"></center>
+								</div>
+							</div>
+							These are the devices I chose as a starting point. The light sensor was chosen for it's minimalist aesthetic (and it's lack of headers gave me a chance to brush up on my soldering) while the moisture sensor was chosen because it was cheap as. The former has turned out to be more than adequate while the latter is obviously a pile of garbage (which I would have known had a done a bit more research, more on this in a later post). As a first task I had to familiarise myself with the Pico W and learn how to connect sensors and take readings:
+							<center><img src="https://cdn.cnx-software.com/wp-content/uploads/2022/06/Raspberry-Pi-Pico-W-pinout.png?lossy=0&strip=none&ssl=1" style="width: 90%"></center>
+							For initial testing the Pico W is plugged into my laptop which is running the Thonny development environment. To start the Pico W in boot mode, simply hold the bootsel button while plugging it into your USB port. You can then go to Thonny's preferences and click the interpreter tab where you will find a button to install micropython on your device:
+							<center><img src="thonny1.png" style="width: 50%; margin-bottom: 1em; margin-top: 1em"></center>
+							You will see a Python prompt show up at the bottom, congratulations, your Pi Pico is now running micropython. Pop your Pi Pico into a solderless breadboard so that it straddles the center, then connect the Vbus pin to the positive rail and any ground pin to the negative rail (both on either the right or left of the breadboard). Now you're ready to connect your sensors to the Pico. In both cases you must first power the sensor by connecting the VCC and GND pins to the positive and negative rails, respectively, that are attached to Vbus and ground of your Pico. Given the Pico is drawing power from the USB cable from your computer, they should now be receiving ~5V. Next, as these are both analog devices, you must connect the signal pin for the sensor. My light sensor signal is labeled "sig" while the moisture sensor has an analog out labeled AO and a digital out labeled DO, so we'll connect to AO. From the diagram above you can see that the ADC pins of the Pico are GP26, GP27, and GP28. Here I've connected the light sensor to GP26:
+							<center><img src="light.jpeg" style="width:50%;margin-bottom: 1em; margin-top: 1em"></center>
+							You can now read the sensor using the following code:
+							<center><img src="thonny2.png" style="width:50%;margin-bottom: 1em; margin-top: 1em"></center>
+							Try taking a reading with the sensor covered and not covered to verify it's working correctly. You can then test the soil sensor similarly by plugging it's AO pin into an ADC and taking readings dry and submerged in water.
+							<h3 style="margin-top:1em">Summing Up</h3>
+							So that's pretty much it for my first blog. I've taken the first steps in designing my system, got a basis for my UI, and learned how to connect my sensors to the Pi Pico and take readings. In the next post I'll take a closer look at the sensors to try and understand how they work and how to calibrate them. I'll also give a run down on why you shouldn't bother with cheap resistive soil sensors.</p>
+							<p>For now I will leave you with an image of my first attempt at monitoring soil moisture with a simple client and server. In this case I wasn't using the Volt UI, but have a web page based more closely on the Real Python tutorial that includes a simple Plotly plot of soil moisture. You might also notice that in this case I'm using a normal Pi Pico (i.e. without wifi). This is because when I bought my first pico I mistakenly ordered the non-wifi version. In this case, I had to also employ serial communication between the Pico and my computer's USB port so that I could then send the API request from the laptop. You can find the code for this setup <a href="https://github.com/robbassett/waterboy/tree/main/prototype_client/pico">here</a>. The main.py script is hosted on the Pico while proto_client.py and talker.py are running the actual client on the laptop that periodically runs functions from main.py via the USB port. You might also notice that the API requests are sent to 127.0.0.1:8000, so yes the server was ALSO running on the laptop... a bit silly, but a decent proof of concept.
+							<center><img src="dashv0.jpeg" style="width:80%;margin-top:1em"></center>
+						</div>
+					</div>
+
+			</div>
+
+		<!-- Scripts -->
+			<script src="../../assets/js/jquery.min.js"></script>
+			<script src="../../assets/js/browser.min.js"></script>
+			<script src="../../assets/js/breakpoints.min.js"></script>
+			<script src="../../assets/js/util.js"></script>
+			<script src="../../assets/js/main.js"></script>
+
+	</body>
+</html>
